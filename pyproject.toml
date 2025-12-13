@@ -1,0 +1,14 @@
+[project]
+    dependencies    = [
+    "polars>=1.36.1",
+    "rich>=14.2.0",
+    "ruff>=0.14.9",
+]
+    description     = "Add your description here"
+    name            = "wh3"
+    readme          = "README.md"
+    requires-python = ">=3.14"
+    version         = "0.1.0"
+[build-system]
+    build-backend = "uv_build"
+    requires      = ["uv_build>=0.8.15,<0.9.0"]
