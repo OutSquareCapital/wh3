@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from pathlib import Path
 
@@ -13,17 +14,16 @@ class DBKeys(StrEnum):
     AGENT_TYPE = auto()
 
 
+@dataclass
 class FactionCommand:
     """Faction command class to hold faction commands and their types.
 
     Must be implemented with class attributes lord and race.
     """
 
-    _lord: str
-    race: str
-
-    def __init__(self, faction: str) -> None:
-        self.faction: str = faction
+    faction: str
+    lord: str = field(init=False)
+    race: str = field(init=False)
 
     def spawn(self) -> None:
         """Spawns an army next to selected character or settlement.
@@ -31,7 +31,7 @@ class FactionCommand:
         Use agent_subtype in the Character art sets table,
         where the agent_type is "lord"
         """
-        print(f"spawn {self._lord} {self.faction}")
+        print(f"spawn {self.lord} {self.faction}")
 
     def give_settlement(self) -> None:
         """Gives <faction_key> ownership of the selected region.
@@ -42,7 +42,7 @@ class FactionCommand:
 
 
 class GenericCommand:
-    def kill_lord(self) -> None:
+    def killlord(self) -> None:
         print("kill")
 
     def set_region_lvl_to_max(self) -> None:

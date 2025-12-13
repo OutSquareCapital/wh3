@@ -1,47 +1,64 @@
+from dataclasses import dataclass
+
 from ._core import FactionCommand
 
 
+@dataclass
 class Chaos(FactionCommand):
-    _lord = "wh_main_chs_lord"
+    lord = "wh_main_chs_lord"
     _leader = "wh_main_chs_archaon"
     race = "chs"
 
 
+@dataclass
 class Greenskin(FactionCommand):
-    _lord = "wh_main_grn_orc_warboss"
+    lord = "wh_main_grn_orc_warboss"
     race = "grn"
 
 
+@dataclass
 class Norsca(FactionCommand):
-    _lord = "wh_main_nor_marauder_chieftain"
+    lord = "wh_main_nor_marauder_chieftain"
     race = "nor"
 
 
+@dataclass
 class Kislev(FactionCommand):
-    _lord = "wh3_main_ksl_boyar"
+    lord = "wh3_main_ksl_boyar"
     race = "ks"
 
 
+@dataclass
 class Skaven(FactionCommand):
-    _lord = "wh2_main_skv_warlord"
+    lord = "wh2_main_skv_warlord"
     race = "skv"
 
 
+@dataclass
 class Empire(FactionCommand):
-    _lord = "wh_main_emp_lord"
+    lord = "wh_main_emp_lord"
     race = "emp"
 
 
+@dataclass
 class Lizardmen(FactionCommand):
-    _lord = "wh2_main_lzd_saurus_old_blood"
+    lord = "wh2_main_lzd_saurus_old_blood"
     race = "lzd"
 
 
+@dataclass
 class Beastmen(FactionCommand):
-    _lord = "wh_dlc03_bst_beastlord"
+    lord = "wh_dlc03_bst_beastlord"
     race = "bst"
 
 
+@dataclass
 class Dwarf(FactionCommand):
-    _lord = "wh_main_dwf_lord"
+    lord = "wh_main_dwf_lord"
     race = "dwf"
+
+
+@dataclass
+class DarkElf(FactionCommand):
+    lord = "wh2_main_def_dreadlord"
+    race = "def"
