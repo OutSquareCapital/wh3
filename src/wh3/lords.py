@@ -4,68 +4,11 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 import polars as pl
+import pyochain as pc
 
-from ._core import AGENTS, CHARACTERS, FACTIONS
+from ._core import AGENTS, CHARACTERS, FRONTEND_FACTION_LEADERS, LORD_TYPE, RACE
 from ._schemas import AGENTS as AGENTS_SCHEMA
 from ._schemas import CHARACTERS as CHARACTERS_SCHEMA
-from ._schemas import FACTIONS as FACTIONS_SCHEMA
-
-
-def _race_mapping() -> pl.LazyFrame:
-    return pl.LazyFrame(
-        {
-            "race": [
-                "chs",
-                "grn",
-                "nor",
-                "ksl",
-                "skv",
-                "emp",
-                "lzd",
-                "bst",
-                "dwf",
-                "def",
-                "hef",
-                "vmp",
-                "tmb",
-                "brt",
-                "wef",
-                "vco",
-                "ogr",
-                "kho",
-                "nur",
-                "sla",
-                "tze",
-                "dae",
-                "cth",
-            ],
-            "lord_type": [
-                "wh_main_chs_lord",
-                "wh_main_grn_orc_warboss",
-                "wh_main_nor_marauder_chieftain",
-                "wh3_main_ksl_boyar",
-                "wh2_main_skv_warlord",
-                "wh_main_emp_lord",
-                "wh2_main_lzd_saurus_old_blood",
-                "wh_dlc03_bst_bray_shaman_beasts",
-                "wh_main_dwf_lord",
-                "wh2_main_def_dreadlord",
-                "wh2_main_hef_prince",
-                "wh_main_vmp_vampire",
-                "wh2_dlc09_tmb_tomb_king",
-                "wh_main_brt_lord",
-                "wh_dlc05_wef_glade_lord",
-                "wh3_main_vmp_vampire_count",
-                "wh3_main_ogr_tyrant",
-                "wh3_main_kho_exalted_bloodthirster",
-                "wh3_main_nur_exalted_great_unclean_one",
-                "wh3_main_sla_exalted_keeper_of_secrets",
-                "wh3_main_tze_exalted_lord_of_change",
-                "wh3_main_dae_daemon_prince",
-                "wh3_main_cth_dragon-blooded_shugengan_lord",
-            ],
-        },
-    )
 
 
 class LegendaryLord(NamedTuple):
@@ -73,8 +16,10 @@ class LegendaryLord(NamedTuple):
 
     name: str
     """Display name (from agent_subtype)."""
+    agent_subtype: str
+    """Agent subtype for spawn command."""
     faction_key: str
-    """Faction key associated with the lord (for commands)"""
+    """Faction key for gr (give settlement) command."""
     lord_type: str
     """Generic lord type for spawning (e.g., wh_main_emp_lord)"""
     race: str
@@ -95,35 +40,28 @@ def load_legendary_lords() -> dict[str, LegendaryLord]:
             pl.col("auto_generate").not_(),
         )
         .select(pl.col("key").alias("agent_subtype"))
-        # Cross join with factions to find best match
+        # Join with frontend_faction_leaders to get the TRUE faction mapping
         .join(
-            pl.scan_ndjson(FACTIONS, schema=FACTIONS_SCHEMA, ignore_errors=True).select(
-                "key",
-                "default_audio_actor_vo_group",
+            pl.scan_csv(
+                FRONTEND_FACTION_LEADERS,
+                separator="\t",
+                has_header=True,
+                skip_rows_after_header=1,  # Skip the metadata row after header
+            ).select(
+                pl.col("agent_subtype_record").alias("agent_subtype"),
+                pl.col("faction").alias("faction_key"),
             ),
-            how="cross",
+            on="agent_subtype",
+            how="left",
         )
-        # Match: faction key contains agent_subtype OR audio group contains it
+        # Fallback: if no faction found, use agent_subtype as faction_key
         .with_columns(
-            pl.col("key")
-            .str.contains(pl.col("agent_subtype"))
-            .or_(
-                pl.col("default_audio_actor_vo_group")
-                .str.contains(pl.col("agent_subtype"))
-                .fill_null(value=False),
-            )
-            .alias("is_match"),
-        )
-        # Keep only matches, or fallback to agent_subtype as faction_key
-        .sort("is_match", descending=True)
-        .group_by("agent_subtype")
-        .agg(
-            pl.when(pl.col("is_match").any())
-            .then(pl.col("key").filter(pl.col("is_match")).first())
-            .otherwise(pl.col("agent_subtype").first())
+            pl.when(pl.col("faction_key").is_null())
+            .then(pl.col("agent_subtype"))
+            .otherwise(pl.col("faction_key"))
             .alias("faction_key"),
         )
-        # Extract race from faction_key using regex
+        # Extract race from faction_key
         .with_columns(
             pl.col("faction_key")
             .str.extract(r"(?:main|dlc\d+|pro\d+|twa\d+)_([a-z]+)", 1)
@@ -141,22 +79,34 @@ def load_legendary_lords() -> dict[str, LegendaryLord]:
             .str.replace_all(r"_\d+", "")
             .alias("display_name"),
         )
-        .join(_race_mapping(), on="race", how="left")
+        .join(
+            pl.LazyFrame(
+                {
+                    "race": RACE,
+                    "lord_type": LORD_TYPE,
+                },
+            ),
+            on="race",
+            how="left",
+        )
         .with_columns(
             pl.col("lord_type").fill_null("wh_main_emp_lord"),
         )
         .collect()
-        .pipe(
-            lambda df: {
-                row["display_name"]: LegendaryLord(
+        .pipe(lambda df: pc.Iter(df.iter_rows(named=True)))
+        .map(
+            lambda row: (
+                row["display_name"],
+                LegendaryLord(
                     name=row["display_name"],
+                    agent_subtype=row["agent_subtype"],
                     faction_key=row["faction_key"],
                     lord_type=row["lord_type"],
                     race=row["race"],
-                )
-                for row in df.iter_rows(named=True)
-            },
+                ),
+            ),
         )
+        .into(dict)
     )
 
 
@@ -188,16 +138,18 @@ def load_all_characters() -> dict[str, Character]:
         )
         .select("art_set_id", "agent_type", "agent_subtype")
         .sort("")
-        .pipe(
-            lambda df: {
-                row["art_set_id"]: Character(
+        .pipe(lambda df: pc.Iter(df.iter_rows(named=True)))
+        .map(
+            lambda row: (
+                row["art_set_id"],
+                Character(
                     art_set_id=row["art_set_id"],
                     agent_type=row["agent_type"],
                     agent_subtype=row["agent_subtype"],
-                )
-                for row in df.iter_rows(named=True)
-            },
+                ),
+            ),
         )
+        .into(dict)
     )
 
 

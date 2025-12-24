@@ -2,11 +2,13 @@
 
 from typing import Annotated
 
+import pyochain as pc
 import pyperclip
 import typer
 from rich.console import Console
 from rich.table import Table
 
+from ._core import COMMANDS
 from .lords import load_all_characters, load_legendary_lords
 
 app = typer.Typer(help="Warhammer 3 console command helper")
@@ -34,7 +36,7 @@ def spawn(lord_name: str) -> None:
         raise typer.Exit(1)
 
     faction_obj = LORDS[lord_name_lower]
-    command = f"spawn {faction_obj.lord_type} {faction_obj.faction_key}"
+    command = f"spawn {faction_obj.agent_subtype}"
     copy_to_clipboard(command, lord_name)
 
 
@@ -70,12 +72,13 @@ def info(lord_name: str) -> None:
     table.add_column("Value", style="green")
 
     table.add_row("Name", lord_name)
+    table.add_row("Agent Subtype", faction_obj.agent_subtype)
     table.add_row("Faction Key", faction_obj.faction_key)
     table.add_row("Lord Type", faction_obj.lord_type)
     table.add_row("Race", faction_obj.race)
     table.add_row(
         "Spawn Command",
-        f"spawn {faction_obj.lord_type} {faction_obj.faction_key}",
+        f"spawn {faction_obj.agent_subtype}",
     )
     table.add_row("Give Settlement", f"gr {faction_obj.faction_key}")
 
@@ -83,28 +86,32 @@ def info(lord_name: str) -> None:
 
 
 @app.command(name="list")
-def list_lords() -> None:
-    """List all available legendary lords."""
+def list_lords(race: str | None = None) -> None:
+    """List all available legendary lords.
+
+    Args:
+        race: Optional race filter (e.g., dwf, grn, emp).
+
+    """
     from .lords import LegendaryLord
 
-    # Dédupliquer les lords (enlever les alias)
-    seen_factions: set[str] = set()
-    unique_lords: list[tuple[str, LegendaryLord]] = []
-
-    for name, faction_obj in LORDS.items():
-        if faction_obj.faction_key not in seen_factions:
-            seen_factions.add(faction_obj.faction_key)
-            unique_lords.append((name, faction_obj))
+    def _add_to_list(faction_obj: LegendaryLord) -> bool:
+        return race is None or faction_obj.race.lower() == race.lower()
 
     table = Table(title="Available Legendary Lords")
     table.add_column("Lord Name", style="cyan", no_wrap=True)
     table.add_column("Faction Key", style="yellow")
     table.add_column("Race", style="green")
 
-    for name, faction_obj in sorted(unique_lords, key=lambda x: x[0]):
-        table.add_row(name, faction_obj.faction_key, faction_obj.race)
+    pc.Iter(LORDS.items()).filter(lambda x: _add_to_list(x[1])).sort(
+        key=lambda x: x[0],
+    ).iter().for_each(
+        lambda x: table.add_row(x[0], x[1].faction_key, x[1].race),
+    )
 
     console.print(table)
+    if race:
+        console.print(f"\n[dim]Showing lords for race: {race}[/dim]")
     console.print("\n[dim]Use: wh3 <lord_name> spawn|give|info[/dim]")
 
 
@@ -116,47 +123,14 @@ def cmd(search: str | None = None) -> None:
         search: Optional search term to filter commands.
 
     """
-    commands = {
-        # Basic commands
-        "kill": "Kill/wound selected character and army",
-        "confederate": "Confederate selected faction",
-        "fff": "Toggle fog of war off",
-        "fow on": "Toggle fog of war on",
-        "tele": "Teleport (select char, then target, then type)",
-        "am": "Restore selected character movement points",
-        # Region commands
-        "primary": "Set region primary slot to max level",
-        "primary <N>": "Set region primary slot to level N",
-        "region": "Give 1000 growth + instant building to all regions",
-        "region off": "Turn off region bonuses",
-        "abandon": "Abandon selected region",
-        # Resources
-        "give gold": "Give 50000 gold",
-        "give gold <N>": "Give N gold (can be negative)",
-        # Army/Character
-        "heal <N>": "Set army health to N% (0-100)",
-        "add xp <N>": "Add N XP to selected character",
-        "add axp <N>": "Add N ranks to all units in army",
-        # Tech/Diplomacy
-        "technology": "Give +2000% research speed",
-        "technology <N>": "Give N% research speed",
-        "alliance": "Military alliance with selected faction",
-        "peace": "Make peace with selected faction",
-        "trade": "Trade agreement with selected faction",
-        "war": "Start war with selected faction",
-    }
-
     table = Table(title="Console Commands Reference")
     table.add_column("Command", style="cyan", no_wrap=True)
     table.add_column("Description", style="white")
-
-    for cmd_name, desc in commands.items():
-        if (
-            search is None
-            or search.lower() in cmd_name.lower()
-            or search.lower() in desc.lower()
-        ):
-            table.add_row(cmd_name, desc)
+    COMMANDS.iter().filter(
+        lambda x: search is None
+        or search.lower() in x[0].lower()
+        or search.lower() in x[1].lower(),
+    ).for_each(lambda x: table.add_row(*x))
 
     console.print(table)
     console.print("\n[dim]Use in-game console. Type command and press Enter.[/dim]")
