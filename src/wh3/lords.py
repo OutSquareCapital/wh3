@@ -1,41 +1,27 @@
 """Load and manage legendary lords data from NDJSON files."""
 
+from typing import NamedTuple
+
 import polars as pl
 import pyochain as pc
 
 from ._consts import LORD_TYPE, Race, RaceType
-from ._models import Character, LegendaryLord
-from ._schemas import Agents, Characters, Data, Paths
+from ._schemas import Agents, Data, Paths
 
 
-def load_all_characters() -> pc.Dict[str, Character]:
-    """Load all characters from NDJSON file."""
-    return (
-        Data.characters.scan(
-            schema=Characters.pl_schema(),
-            ignore_errors=True,
-        )
-        .filter(
-            pl.col("agent_type").is_not_null(),
-            pl.col("agent_subtype").is_not_null(),
-            pl.col("is_custom").not_(),
-        )
-        .select("art_set_id", "agent_type", "agent_subtype")
-        .sort("")
-        .collect()
-        .pipe(lambda df: pc.Iter(df.iter_rows(named=True)))
-        .map(
-            lambda row: (
-                row["art_set_id"],
-                Character(
-                    art_set_id=row["art_set_id"],
-                    agent_type=row["agent_type"],
-                    agent_subtype=row["agent_subtype"],
-                ),
-            ),
-        )
-        .into(pc.Dict.from_)
-    )
+class LegendaryLord(NamedTuple):
+    """Legendary lord with all associated data."""
+
+    name: str
+    """Display name (from agent_subtype)."""
+    agent_subtype: str
+    """Agent subtype for spawn command."""
+    faction_key: str
+    """Faction key for gr (give settlement) command."""
+    lord_type: str
+    """Generic lord type for spawning (e.g., wh_main_emp_lord)"""
+    race: str
+    """Race abbreviation (e.g., emp, chs, skv)"""
 
 
 def load_legendary_lords() -> pc.Dict[str, LegendaryLord]:

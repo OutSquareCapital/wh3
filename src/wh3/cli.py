@@ -12,35 +12,28 @@ from .lords import LegendaryLord, load_legendary_lords
 
 app = typer.Typer(help="Warhammer 3 console command helper")
 console = Console()
-
+LordNameArg = Annotated[str, typer.Argument(help="Name of the legendary lord")]
 LORDS = load_legendary_lords()
 
 
-def copy_to_clipboard(command: str, lord_name: str) -> None:
-    """Copie la commande dans le clipboard et affiche un message."""
-    pyperclip.copy(command)
-    console.print(f"✓ [green]Command copied to clipboard for {lord_name}:[/green]")
-    console.print(f"  [cyan]{command}[/cyan]")
-
-
 @app.command()
-def spawn(lord_name: Annotated[str, typer.Argument()]) -> None:
+def spawn(lord_name: LordNameArg) -> None:
     """Generate spawn command for a legendary lord."""
     faction_obj = _get_lord(lord_name)
     command = f"spawn {faction_obj.agent_subtype}"
-    copy_to_clipboard(command, lord_name)
+    _copy_to_clipboard(command, lord_name)
 
 
 @app.command()
-def give(lord_name: Annotated[str, typer.Argument()]) -> None:
+def give(lord_name: LordNameArg) -> None:
     """Generate give_settlement command for a legendary lord."""
     faction_obj = _get_lord(lord_name)
     command = f"gr {faction_obj.faction_key}"
-    copy_to_clipboard(command, lord_name)
+    _copy_to_clipboard(command, lord_name)
 
 
 @app.command()
-def info(lord_name: Annotated[str, typer.Argument()]) -> None:
+def info(lord_name: LordNameArg) -> None:
     """Display all information about a legendary lord."""
     faction_obj = _get_lord(lord_name)
 
@@ -71,19 +64,27 @@ def list_lords(
 ) -> None:
     """List all available legendary lords."""
 
-    def _add_to_list(faction_obj: LegendaryLord) -> bool:
-        return race is None or faction_obj.race.lower() == race.lower()
+    def _add_to_table(table: Table) -> None:
+        def _add_to_list(faction_obj: LegendaryLord) -> bool:
+            return race is None or faction_obj.race.lower() == race.lower()
+
+        return (
+            LORDS.iter()
+            .filter(lambda x: _add_to_list(x.value))
+            .sort(
+                key=lambda x: x.key,
+            )
+            .iter()
+            .for_each(
+                lambda x: table.add_row(x.key, x.value.faction_key, x.value.race),
+            )
+        )
 
     table = Table(title="Available Legendary Lords")
     table.add_column("Lord Name", style="cyan", no_wrap=True)
     table.add_column("Faction Key", style="yellow")
     table.add_column("Race", style="green")
-
-    LORDS.iter().filter(lambda x: _add_to_list(x[1])).sort(
-        key=lambda x: x[0],
-    ).iter().for_each(
-        lambda x: table.add_row(x[0], x[1].faction_key, x[1].race),
-    )
+    _add_to_table(table)
 
     console.print(table)
     if race:
@@ -104,9 +105,9 @@ def cmd(
     table.add_column("Description", style="white")
     COMMANDS.iter().filter(
         lambda x: search is None
-        or search.lower() in x[0].lower()
-        or search.lower() in x[1].lower(),
-    ).for_each(lambda x: table.add_row(*x))
+        or search.lower() in x.key.lower()
+        or search.lower() in x.value.lower(),
+    ).for_each(lambda x: table.add_row(x.key, x.value))
 
     console.print(table)
     console.print("\n[dim]Use in-game console. Type command and press Enter.[/dim]")
@@ -119,6 +120,12 @@ def _get_lord(lord_name: str) -> LegendaryLord:
         return typer.Exit(1)
 
     return LORDS.get_item(lord_name.lower()).ok_or_else(_not_found).unwrap()
+
+
+def _copy_to_clipboard(command: str, lord_name: str) -> None:
+    pyperclip.copy(command)
+    console.print(f"✓ [green]Command copied to clipboard for {lord_name}:[/green]")
+    console.print(f"  [cyan]{command}[/cyan]")
 
 
 if __name__ == "__main__":
