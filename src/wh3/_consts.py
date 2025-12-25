@@ -1,14 +1,8 @@
-from pathlib import Path
+from enum import StrEnum, auto
 
+import polars as pl
 import pyochain as pc
 
-DATA = Path("data")
-AGENTS = DATA.joinpath("agents.ndjson")
-CHARACTERS = DATA.joinpath("characters.ndjson")
-FACTIONS = DATA.joinpath("factions.ndjson")
-FRONTEND_FACTION_LEADERS = DATA.joinpath(
-    "db/frontend_faction_leaders_tables/data__.tsv",
-)
 COMMANDS = pc.Dict(
     {
         # Basic commands
@@ -40,7 +34,7 @@ COMMANDS = pc.Dict(
         "war": "Start war with selected faction",
     },
 )
-LORD_TYPE = [
+LORD_TYPE = (  # TODO: why is this hardcoded? need to be loaded from data.
     "wh_main_chs_lord",
     "wh_main_grn_orc_warboss",
     "wh_main_nor_marauder_chieftain",
@@ -64,29 +58,40 @@ LORD_TYPE = [
     "wh3_main_tze_exalted_lord_of_change",
     "wh3_main_dae_daemon_prince",
     "wh3_main_cth_dragon-blooded_shugengan_lord",
-]
-RACE = [
-    "chs",
-    "grn",
-    "nor",
-    "ksl",
-    "skv",
-    "emp",
-    "lzd",
-    "bst",
-    "dwf",
-    "def",
-    "hef",
-    "vmp",
-    "tmb",
-    "brt",
-    "wef",
-    "vco",
-    "ogr",
-    "kho",
-    "nur",
-    "sla",
-    "tze",
-    "dae",
-    "cth",
-]
+    "wh2_dlc11_cst_admiral_death",
+    "wh3_dlc23_chd_sorcerer_prophet_death",
+)
+
+
+class Race(StrEnum):
+    """Race abreviations identifiers."""
+
+    CHS = auto()
+    GRN = auto()
+    NOR = auto()
+    KSL = auto()
+    SKV = auto()
+    EMP = auto()
+    LZD = auto()
+    BST = auto()
+    DWF = auto()
+    DEF = auto()
+    HEF = auto()
+    VMP = auto()
+    TMB = auto()
+    BRT = auto()
+    WEF = auto()
+    VCO = auto()
+    OGR = auto()
+    KHO = auto()
+    NUR = auto()
+    SLA = auto()
+    TZE = auto()
+    DAE = auto()
+    CTH = auto()
+    CST = auto()
+    CHD = auto()
+
+
+RaceType = pl.Enum(Race)
+"""DataType of the races abreviations."""
