@@ -6,6 +6,7 @@
     "typer>=0.12.0",
     "pyperclip>=1.9.0",
     "pyochain>=0.6.1.0",
+    "framelib",
 ]
     description     = "Add your description here"
     name            = "wh3"
@@ -18,3 +19,6 @@
 [build-system]
     build-backend = "uv_build"
     requires      = ["uv_build>=0.8.15,<0.9.0"]
+
+[tool.uv.sources]
+framelib = { git = "https://github.com/OutSquareCapital/framelib.git" }
