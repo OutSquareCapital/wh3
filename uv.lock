@@ -95,7 +95,7 @@ wheels = [
 [[package]]
 name = "framelib"
 version = "0.1.44"
-source = { git = "https://github.com/OutSquareCapital/framelib.git#ea0648840937cf79a51e8670afe49ac5385ac3cf" }
+source = { git = "https://github.com/OutSquareCapital/framelib.git#f3437fc2e0084a0c0e818c8cee7d928d169dd6ef" }
 dependencies = [
     { name = "duckdb" },
     { name = "narwhals" },
@@ -202,15 +202,15 @@ wheels = [
 
 [[package]]
 name = "pyochain"
-version = "0.6.1.1"
+version = "0.6.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cytoolz" },
     { name = "more-itertools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/e6/cfc543d371bed0bef7776e4acf5a3e3ddd69eafae065917ad0fc615e78d3/pyochain-0.6.1.1.tar.gz", hash = "sha256:949ef6aa0efd8a4bc187b4bb2f3599330f7ff80e931e800a2f15b47aca8fe842", size = 42677, upload-time = "2025-12-25T17:31:40.415Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/96/672fc838701c794455841d674afb91385a2d025bccef805c92b8f65367c6/pyochain-0.6.1.2.tar.gz", hash = "sha256:cabeb846d1dcde0d839e943b9fae5b9049721f5b6e1f17fa80cced5ed2894b99", size = 41341, upload-time = "2025-12-26T15:31:11.07Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/b3/f867bef634045cf670042cf89ac4665063fdc88f1021be1c614c79186f84/pyochain-0.6.1.1-py3-none-any.whl", hash = "sha256:294bd946235e5f591941327bdd96576dfc304072a6a1fa005d7d4a1239c035b5", size = 51074, upload-time = "2025-12-25T17:31:39.603Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/3f/237db545cb6d6168da8b3aa73d3511db42d8ca7a5224ab1bd0907e0f52cf/pyochain-0.6.1.2-py3-none-any.whl", hash = "sha256:95b8efccf62fa5dee45b6fccccee3ae34bee45d60c604252c7a698388a3d0536", size = 48341, upload-time = "2025-12-26T15:31:09.95Z" },
 ]
 
 [[package]]

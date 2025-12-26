@@ -79,7 +79,7 @@ def load_legendary_lords() -> pc.Dict[str, LegendaryLord]:
                 ),
             ),
         )
-        .into(pc.Dict.from_)
+        .into(pc.Dict)
     )
 
 
