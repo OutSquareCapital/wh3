@@ -1,12 +1,4 @@
-from pathlib import Path
-
 import framelib as fl
-
-
-class Paths:
-    FRONTEND_FACTION_LEADERS = Path("data").joinpath(
-        "db/frontend_faction_leaders_tables/data__.tsv",
-    )
 
 
 class Agents(fl.Schema):
@@ -96,7 +88,28 @@ class Factions(fl.Schema):
     uniform_colour_tertiary = fl.String()
 
 
+class FrontendFactionLeaders(fl.Schema):
+    key = fl.String()
+    uniform = fl.String()
+    x_offset = fl.Float64()
+    y_offset = fl.Float64()
+    character_image = fl.String()
+    prelude_battle = fl.String()
+    video = fl.String()
+    loading_screen_image = fl.String()
+    loading_screen_intro_video = fl.String()
+    override_force_location_x = fl.Float64()
+    override_force_location_y = fl.Float64()
+    voiceover = fl.String()
+    show_full_intro_option = fl.Boolean()
+    difficulty = fl.String()
+    startpos_map = fl.String()
+    agent_subtype_record = fl.String()
+    faction = fl.String()
+
+
 class Data(fl.Folder):
     agents = fl.NDJson(model=Agents)
     characters = fl.NDJson(model=Characters)
     factions = fl.NDJson(model=Factions)
+    frontend_faction_leaders = fl.NDJson(model=FrontendFactionLeaders)

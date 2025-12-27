@@ -1,12 +1,12 @@
 """Load and manage legendary lords data from NDJSON files."""
 
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 import polars as pl
 import pyochain as pc
 
 from ._consts import LORD_TYPE, Race, RaceType
-from ._schemas import Agents, Data, Paths
+from ._schemas import Data
 
 
 class LegendaryLord(NamedTuple):
@@ -23,12 +23,22 @@ class LegendaryLord(NamedTuple):
     race: str
     """Race abbreviation (e.g., emp, chs, skv)"""
 
+    @classmethod
+    def from_row(cls, row: dict[str, str]) -> Self:
+        """Create **Self** from a Polars DataFrame row."""
+        return cls(
+            name=row["display_name"],
+            agent_subtype=row["agent_subtype"],
+            faction_key=row["faction_key"],
+            lord_type=row["lord_type"],
+            race=row["race"],
+        )
+
 
 def load_legendary_lords() -> pc.Dict[str, LegendaryLord]:
     """Load all legendary lords from NDJSON files."""
     return (
         Data.agents.scan(
-            schema=Agents.pl_schema(),
             ignore_errors=True,
         )
         .filter(
@@ -36,14 +46,9 @@ def load_legendary_lords() -> pc.Dict[str, LegendaryLord]:
             pl.col("auto_generate").not_(),
         )
         .select(pl.col("key").alias("agent_subtype"))
-        # Join with frontend_faction_leaders to get the TRUE faction mapping
+        # Join with frontend_faction_leaders to get the faction mapping
         .join(
-            pl.scan_csv(
-                Paths.FRONTEND_FACTION_LEADERS,
-                separator="\t",
-                has_header=True,
-                skip_rows_after_header=1,  # Skip the metadata row after header
-            ).select(
+            Data.frontend_faction_leaders.scan(ignore_errors=True).select(
                 pl.col("agent_subtype_record").alias("agent_subtype"),
                 pl.col("faction").alias("faction_key"),
             ),
@@ -70,13 +75,7 @@ def load_legendary_lords() -> pc.Dict[str, LegendaryLord]:
         .map(
             lambda row: (
                 row["display_name"],
-                LegendaryLord(
-                    name=row["display_name"],
-                    agent_subtype=row["agent_subtype"],
-                    faction_key=row["faction_key"],
-                    lord_type=row["lord_type"],
-                    race=row["race"],
-                ),
+                LegendaryLord.from_row(row),
             ),
         )
         .into(pc.Dict)
