@@ -127,15 +127,6 @@ uv run wh3 cmd heal    # Show heal commands
 | `wh3 info <lord_name>` | Display detailed information about a lord |
 | `wh3 cmd [search]` | Show console commands reference (optionally filtered) |
 
-## 🗂️ Data Sources
-
-The tool uses game data files extracted from Total War: Warhammer III:
-
-- `data/agents.ndjson` - Agent/character data
-- `data/factions.ndjson` - Faction information
-- `data/characters.ndjson` - Character mappings
-- `data/db/` - Various game database tables
-
 Data is processed using [Polars](https://www.pola.rs/) for fast and efficient queries.
 
 ## 🛠️ Development

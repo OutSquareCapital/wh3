@@ -202,15 +202,15 @@ wheels = [
 
 [[package]]
 name = "pyochain"
-version = "0.6.1.2"
+version = "0.6.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cytoolz" },
     { name = "more-itertools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/96/672fc838701c794455841d674afb91385a2d025bccef805c92b8f65367c6/pyochain-0.6.1.2.tar.gz", hash = "sha256:cabeb846d1dcde0d839e943b9fae5b9049721f5b6e1f17fa80cced5ed2894b99", size = 41341, upload-time = "2025-12-26T15:31:11.07Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/18/bdebc84d30721977324e383f863609c711fece38f2c7135e357da25e1bd1/pyochain-0.6.1.3.tar.gz", hash = "sha256:ff7d518be2974523c632a2c4a3abe770aa987ce9157ddc27a394224002c3f84a", size = 41338, upload-time = "2025-12-28T02:29:38.831Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/3f/237db545cb6d6168da8b3aa73d3511db42d8ca7a5224ab1bd0907e0f52cf/pyochain-0.6.1.2-py3-none-any.whl", hash = "sha256:95b8efccf62fa5dee45b6fccccee3ae34bee45d60c604252c7a698388a3d0536", size = 48341, upload-time = "2025-12-26T15:31:09.95Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/33/97626cd416ac060761bb48b81d3099635517911bea397dbc70af542d33ef/pyochain-0.6.1.3-py3-none-any.whl", hash = "sha256:2101ba2d3f00ec9f3d338c034744f5496ee95a6e1a5eac4354109f0f07f12699", size = 48203, upload-time = "2025-12-28T02:29:37.671Z" },
 ]
 
 [[package]]
