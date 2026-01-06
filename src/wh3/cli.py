@@ -6,6 +6,7 @@ import pyperclip
 import typer
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 from ._consts import COMMANDS
 from .lords import LegendaryLord, load_legendary_lords
@@ -70,13 +71,13 @@ def list_lords(
 
         return (
             LORDS.iter()
-            .filter(lambda x: _add_to_list(x.value))
+            .filter_star(lambda _, value: _add_to_list(value))
             .sort(
-                key=lambda x: x.key,
+                key=lambda x: x[0],
             )
             .iter()
-            .for_each(
-                lambda x: table.add_row(x.key, x.value.faction_key, x.value.race),
+            .for_each_star(
+                lambda key, value: table.add_row(key, value.faction_key, value.race),
             )
         )
 
@@ -88,8 +89,12 @@ def list_lords(
 
     console.print(table)
     if race:
-        console.print(f"\n[dim]Showing lords for race: {race}[/dim]")
-    console.print("\n[dim]Use: wh3 <lord_name> spawn|give|info[/dim]")
+        console.print(
+            Text().append("\n").append(f"Showing lords for race: {race}", style="dim"),
+        )
+    console.print(
+        Text().append("\n").append("Use: wh3 <lord_name> spawn|give|info", style="dim"),
+    )
 
 
 @app.command()
@@ -103,20 +108,33 @@ def cmd(
     table = Table(title="Console Commands Reference")
     table.add_column("Command", style="cyan", no_wrap=True)
     table.add_column("Description", style="white")
-    COMMANDS.iter().filter(
-        lambda x: search is None
-        or search.lower() in x.key.lower()
-        or search.lower() in x.value.lower(),
-    ).for_each(lambda x: table.add_row(x.key, x.value))
+    COMMANDS.iter().filter_star(
+        lambda key, value: search is None
+        or search.lower() in key.lower()
+        or search.lower() in value.lower(),
+    ).for_each_star(lambda key, value: table.add_row(key, value))
 
     console.print(table)
-    console.print("\n[dim]Use in-game console. Type command and press Enter.[/dim]")
+    console.print(
+        Text()
+        .append("\n")
+        .append("Use in-game console. Type command and press Enter.", style="dim"),
+    )
 
 
 def _get_lord(lord_name: str) -> LegendaryLord:
     def _not_found() -> typer.Exit:
-        console.print(f"[red]Error:[/red] Lord '{lord_name}' not found.")
-        console.print("Use [cyan]wh3 list[/cyan] to see available lords.")
+        console.print(
+            Text()
+            .append("Error: ", style="red")
+            .append(f"Lord '{lord_name}' not found."),
+        )
+        console.print(
+            Text()
+            .append("Use ", style="white")
+            .append("wh3 list", style="cyan")
+            .append(" to see available lords.", style="white"),
+        )
         return typer.Exit(1)
 
     return LORDS.get_item(lord_name.lower()).ok_or_else(_not_found).unwrap()
@@ -124,8 +142,14 @@ def _get_lord(lord_name: str) -> LegendaryLord:
 
 def _copy_to_clipboard(command: str, lord_name: str) -> None:
     pyperclip.copy(command)
-    console.print(f"✓ [green]Command copied to clipboard for {lord_name}:[/green]")
-    console.print(f"  [cyan]{command}[/cyan]")
+    console.print(
+        Text()
+        .append("✓ ", style="green")
+        .append(f"Command copied to clipboard for {lord_name}:"),
+    )
+    console.print(
+        Text().append("  ").append(command, style="cyan"),
+    )
 
 
 if __name__ == "__main__":
